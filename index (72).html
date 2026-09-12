@@ -1,0 +1,916 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mutumutu — analýza recenzí aplikace | Etnetera Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green:#45B183; --green-deep:#17795A; --green-mid:#7FC9A5; --green-pale:#BEE3D1; --green-wash:#EDF7F2;
+  --ink:#16211C; --ink-2:#4A5852; --ink-3:#7F8D86;
+  --paper:#FFFFFF; --mist:#F5F8F6; --line:#DFE8E3;
+  --red:#B3392E; --red-soft:#D08A72; --amber:#C08A1E;
+  --measure:66ch;
+}
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:'Montserrat','Segoe UI',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;
+  font-size:16px; line-height:1.62; font-weight:400; -webkit-font-smoothing:antialiased;
+}
+.wrap { max-width:1080px; margin:0 auto; padding:0 32px; }
+p { max-width:var(--measure); }
+
+/* header */
+header.top {
+  position:sticky; top:0; z-index:20; background:rgba(255,255,255,.94);
+  backdrop-filter:saturate(160%) blur(8px); border-bottom:1px solid var(--line);
+}
+.top-in { display:flex; align-items:center; gap:20px; height:60px; }
+.top-in img { height:24px; width:auto; display:block; }
+.top-title { font-size:13px; font-weight:500; color:var(--ink-2); letter-spacing:.01em; }
+.top-title b { color:var(--ink); font-weight:600; }
+nav.toc { margin-left:auto; display:flex; gap:20px; }
+nav.toc a { font-size:12.5px; font-weight:500; color:var(--ink-3); text-decoration:none; }
+nav.toc a:hover { color:var(--green-deep); }
+@media (max-width:900px) { nav.toc { display:none; } }
+
+/* hero */
+.hero { padding:88px 0 56px; }
+.hero h1 {
+  font-size:clamp(32px,4.6vw,50px); line-height:1.06; letter-spacing:-.03em;
+  font-weight:800; margin:0 0 10px; max-width:22ch;
+}
+.hero-sub {
+  font-size:17px; font-weight:500; color:var(--green-deep); margin:0 0 28px;
+  padding-bottom:22px; border-bottom:3px solid var(--green); display:inline-block;
+}
+.hero .lead + .lead { margin-top:16px; font-size:15.5px; color:var(--ink-3); }
+.hero .lead { font-size:18.5px; line-height:1.6; color:var(--ink-2); max-width:60ch; font-weight:400; }
+.hero-quote {
+  margin:44px 0 0; padding:28px 32px; background:var(--green-wash);
+  border-left:4px solid var(--green); border-radius:0 8px 8px 0; max-width:760px;
+}
+.hero-quote blockquote {
+  margin:0; font-size:23px; line-height:1.42; font-weight:600; letter-spacing:-.012em; color:var(--ink);
+}
+.hero-quote figcaption { margin-top:16px; display:flex; flex-wrap:wrap; gap:14px; align-items:center; font-size:12.5px; color:var(--ink-2); }
+
+/* metrics */
+.metrics { border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin-top:56px; }
+.metrics-in { display:grid; grid-template-columns:repeat(5,1fr); }
+.metric { padding:26px 22px 24px 0; border-right:1px solid var(--line); }
+.metric:last-child { border-right:0; }
+.metric .n { font-size:34px; font-weight:700; letter-spacing:-.03em; line-height:1; color:var(--green-deep); }
+.metric .n small { font-size:17px; font-weight:600; letter-spacing:0; }
+.metric .k { margin-top:9px; font-size:12.5px; line-height:1.45; color:var(--ink-2); max-width:22ch; }
+@media (max-width:860px) {
+  .metrics-in { grid-template-columns:repeat(2,1fr); }
+  .metric { border-bottom:1px solid var(--line); padding-right:18px; }
+  .metric:nth-child(2n) { border-right:0; }
+}
+
+/* sections */
+section { padding:64px 0; border-bottom:1px solid var(--line); }
+section:last-of-type { border-bottom:0; }
+h2 { font-size:clamp(26px,3.4vw,34px); font-weight:700; letter-spacing:-.025em; line-height:1.14; margin:0 0 8px; }
+.sec-sub { color:var(--ink-3); font-size:14.5px; margin:0 0 34px; max-width:64ch; }
+h3 { font-size:20px; font-weight:700; letter-spacing:-.018em; margin:0 0 6px; line-height:1.25; }
+h4 { font-size:14px; font-weight:600; margin:0 0 6px; letter-spacing:-.005em; }
+.lead-sm { color:var(--ink-2); font-size:15.5px; margin:0 0 22px; }
+
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:52px; align-items:start; }
+@media (max-width:900px) { .grid2 { grid-template-columns:1fr; gap:36px; } }
+
+/* findings */
+.findings { counter-reset:f; display:grid; gap:0; max-width:900px; }
+.finding { display:grid; grid-template-columns:44px 1fr; gap:20px; padding:22px 0; border-top:1px solid var(--line); }
+.finding:last-child { border-bottom:1px solid var(--line); }
+.finding .fn { font-size:15px; font-weight:700; color:var(--green); padding-top:2px; }
+.finding p { margin:0; font-size:15.5px; }
+.finding b { font-weight:600; color:var(--ink); }
+
+/* charts */
+.chart-block { margin:0 0 8px; }
+.chart { width:100%; height:auto; overflow:visible; display:block; }
+.chart text { font-family:'Montserrat',sans-serif; }
+.cl { font-size:13px; fill:var(--ink); font-weight:500; }
+.cl.stars { fill:var(--green-deep); font-size:14px; letter-spacing:1px; }
+.cv { font-size:13px; fill:var(--ink); font-weight:600; }
+.cv.muted { fill:var(--ink-3); font-weight:500; }
+.ct { font-size:11.5px; fill:var(--ink-2); font-weight:500; }
+.ct.bold { font-weight:700; fill:var(--ink); }
+.ct.muted { fill:var(--ink-3); font-weight:400; }
+.cin { font-size:12px; fill:#fff; font-weight:700; }
+.track { fill:var(--mist); }
+.grid { stroke:var(--line); stroke-width:1; }
+.vol { fill:var(--green-wash); }
+.legend { display:flex; flex-wrap:wrap; gap:20px; margin:14px 0 0; font-size:12.5px; color:var(--ink-2); }
+.legend span { display:inline-flex; align-items:center; gap:7px; }
+.legend i { width:11px; height:11px; border-radius:2px; display:inline-block; }
+.cap { font-size:12.5px; color:var(--ink-3); margin:14px 0 0; max-width:58ch; }
+
+/* table */
+table.data { border-collapse:collapse; width:100%; font-size:14px; max-width:840px; }
+table.data th, table.data td { text-align:left; padding:12px 16px 12px 0; border-bottom:1px solid var(--line); vertical-align:top; }
+table.data th { font-weight:600; font-size:12.5px; color:var(--ink-3); border-bottom:1px solid var(--ink-3); }
+table.data td b { font-weight:600; }
+
+/* quotes */
+.q { margin:0 0 18px; padding:0 0 0 18px; border-left:2px solid var(--green-mid); }
+.q blockquote { margin:0; font-size:15px; line-height:1.55; color:var(--ink); font-weight:400; }
+.q .q-title { margin:0 0 4px; font-size:13px; font-weight:700; color:var(--green-deep); }
+.q figcaption { margin-top:8px; display:flex; flex-wrap:wrap; gap:12px; align-items:center; font-size:11.5px; color:var(--ink-3); }
+.q-au { font-weight:600; color:var(--ink-2); }
+.st { color:var(--green-deep); letter-spacing:1px; font-size:12px; }
+.st-off { color:var(--line); }
+mark { background:#DFF0E7; color:var(--ink); padding:1px 2px; border-radius:2px; }
+
+/* pain blocks */
+.pain { padding:44px 0; border-top:1px solid var(--line); }
+.pain:first-of-type { border-top:2px solid var(--ink); }
+.pain-head { display:grid; grid-template-columns:64px 1fr; gap:18px; align-items:start; margin-bottom:20px; }
+.pain-rank {
+  font-size:40px; font-weight:300; color:var(--green); line-height:.9; letter-spacing:-.04em;
+  border-top:3px solid var(--green); padding-top:8px; display:block;
+}
+.pain-stats { display:flex; flex-wrap:wrap; gap:22px; margin-top:10px; font-size:12.5px; color:var(--ink-3); }
+.pain-stats b { font-size:16px; font-weight:700; color:var(--ink); letter-spacing:-.02em; }
+.pain .quotes { display:grid; grid-template-columns:1fr 1fr; gap:20px 40px; margin-bottom:26px; }
+@media (max-width:900px) { .pain .quotes { grid-template-columns:1fr; } }
+.insight { background:var(--mist); border-radius:8px; padding:20px 24px; max-width:820px; }
+.insight h4 { color:var(--green-deep); }
+.insight p { margin:0; font-size:14.5px; color:var(--ink-2); max-width:70ch; }
+
+/* praise */
+.praise { display:grid; grid-template-columns:repeat(2,1fr); gap:22px 40px; }
+@media (max-width:900px) { .praise { grid-template-columns:1fr; } }
+.praise .q { border-left-color:var(--green); }
+
+/* business */
+.biz { background:var(--ink); color:#EAF2ED; border-radius:12px; padding:44px 48px; }
+.biz h2 { color:#fff; }
+.biz .sec-sub { color:#93A69D; }
+.biz p { color:#C9D8D1; }
+.biz .q { border-left-color:var(--green); }
+.biz .q blockquote { color:#EAF2ED; }
+.biz .q figcaption { color:#8FA298; }
+.biz .q-au { color:#B9CCC3; }
+.biz .st-off { color:#3A4A43; }
+.biz-grid { display:grid; grid-template-columns:1fr 1fr; gap:26px 44px; margin-top:30px; }
+@media (max-width:900px) { .biz-grid { grid-template-columns:1fr; } .biz { padding:32px 24px; } }
+.biz-note { margin-top:34px; padding-top:26px; border-top:1px solid #2C3A34; }
+.biz-note p { max-width:72ch; font-size:15px; }
+
+/* recs */
+.recs { display:grid; grid-template-columns:1fr 1fr; gap:28px 44px; }
+@media (max-width:900px) { .recs { grid-template-columns:1fr; } }
+.rec { padding-top:18px; border-top:2px solid var(--green); }
+.rec-top { display:flex; justify-content:space-between; align-items:baseline; gap:16px; margin-bottom:8px; }
+.rec h4 { font-size:16px; font-weight:700; letter-spacing:-.015em; margin:0; }
+.rec p { margin:0; font-size:14.5px; color:var(--ink-2); }
+.prio { font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px; white-space:nowrap; }
+.prio-hi { background:var(--green-deep); color:#fff; }
+.prio-mid { background:var(--green-wash); color:var(--green-deep); }
+
+.callout { border-left:3px solid var(--amber); background:#FDF8EC; padding:18px 22px; border-radius:0 8px 8px 0; max-width:820px; margin:28px 0 0; }
+.callout p { margin:0; font-size:14.5px; color:#6B5312; max-width:70ch; }
+.callout h4 { color:#8A6A12; }
+
+ul.plain { padding-left:18px; margin:0; max-width:var(--measure); }
+ul.plain li { margin-bottom:9px; font-size:15px; color:var(--ink-2); }
+ul.plain li b { color:var(--ink); font-weight:600; }
+
+footer { padding:44px 0 60px; border-top:1px solid var(--line); }
+.foot-in { display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+.foot-in img { height:22px; }
+.foot-in p { margin:0; font-size:12.5px; color:var(--ink-3); }
+
+@media print {
+  header.top { position:static; }
+  nav.toc { display:none; }
+  section, .pain, .rec, .q, .insight { break-inside:avoid; }
+  .biz { background:#fff; color:var(--ink); border:1px solid var(--line); }
+  .biz h2, .biz p, .biz .q blockquote { color:var(--ink); }
+  body { font-size:11pt; }
+}
+@media (max-width:640px) {
+  .wrap { padding:0 20px; }
+  .hero { padding:52px 0 40px; }
+  .hero-quote { padding:22px 20px; }
+  .hero-quote blockquote { font-size:19px; }
+  .hero .lead { font-size:16.5px; }
+  section { padding:48px 0; }
+  .biz { padding:32px 22px; }
+  .pain-head { grid-template-columns:48px 1fr; gap:14px; }
+  .pain-rank { font-size:32px; }
+  .top-in { height:auto; padding:12px 0; }
+}
+@media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+ <div class="wrap top-in">
+  <img src="data:image/png;base64,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" alt="Etnetera Flow">
+  <span class="top-title"><b>Mutumutu</b> — analýza recenzí mobilní aplikace</span>
+  <nav class="toc">
+   <a href="#zjisteni">Zjištění</a>
+   <a href="#data">Data</a>
+   <a href="#hodnoceni">Hodnocení</a>
+   <a href="#painy">Pain body</a>
+   <a href="#byznys">Dopad</a>
+   <a href="#doporuceni">Doporučení</a>
+  </nav>
+ </div>
+</header>
+
+<div class="wrap">
+ <div class="hero">
+  <h1>Analýza aplikace Mutumutu</h1>
+  <p class="hero-sub">Recenze uživatelů z Google Play a App Store</p>
+  <p class="lead">Rozbor 81 textových recenzí za období 22. prosince 2018 až 2. prosince 2025, doplněný o celková hodnocení, která oba obchody uvádějí k 12. září 2026. Dokument popisuje, na co si uživatelé stěžují, jak často a s jakým dopadem.</p>
+  <p class="lead">Všechny citace jsou doslovné, včetně překlepů a chybějící diakritiky. Nic není přeformulované ani doplněné. Zkrácené citace jsou označené třemi tečkami.</p>
+ </div>
+</div>
+
+<div class="metrics">
+ <div class="wrap metrics-in">
+  <div class="metric"><div class="n">81</div><div class="k">recenzí s textem<br>(72 Google Play, 9 App Store)</div></div>
+  <div class="metric"><div class="n">2,3<small>★</small></div><div class="k">průměrné hodnocení textových recenzí</div></div>
+  <div class="metric"><div class="n">68 %</div><div class="k">recenzí má jednu nebo dvě hvězdy</div></div>
+  <div class="metric"><div class="n">48 %</div><div class="k">recenzí mluví o nepřenesených datech</div></div>
+  <div class="metric"><div class="n">5×</div><div class="k">jedna hvězda v pěti posledních recenzích v datasetu</div></div>
+ </div>
+</div>
+
+<div class="wrap">
+
+<section id="zjisteni">
+ <h2>Hlavní zjištění</h2>
+ <p class="sec-sub">Shrnutí nejsilnějších signálů v datech. Detaily a citace k jednotlivým bodům jsou v dalších kapitolách.</p>
+ <div class="findings">
+  <div class="finding"><span class="fn">01</span><p><b>Kritika míří na aplikaci, ne na pojištění.</b> Sedm uživatelů v jedné recenzi současně chválí produkt a odsuzuje aplikaci. Kritika tedy míří na software, ne na samotnou pojistku.</p></div>
+  <div class="finding"><span class="fn">02</span><p><b>Přenos dat je dominantní problém.</b> Zmiňuje ho 39 z 81 recenzí, tedy 48 %. Mezi negativními recenzemi je to 33 z 55.</p></div>
+  <div class="finding"><span class="fn">03</span><p><b>Není to nová chyba, je to chronický stav.</b> Stížnosti na synchronizaci se objevují v každém roce od 2019 do 2025 a napříč verzemi od 2.5.3 po 4.16.2 a iOS 5.0.</p></div>
+  <div class="finding"><span class="fn">04</span><p><b>Poslední release problém prohloubil.</b> Pět nejnovějších recenzí v datasetu, od 9. listopadu do 2. prosince 2025, má shodně jednu hvězdu. Na iOS uživatelé jmenují verzi 5.0, po které se přestal připisovat běh a jízda na kole.</p></div>
+  <div class="finding"><span class="fn">05</span><p><b>Chyba v aplikaci má přímou cenu.</b> Aplikace je nositelem slevy na pojistném. Když nepřenese data, uživatel přichází o peníze — a 10 recenzí to spojuje s úvahou o ukončení smlouvy.</p></div>
+  <div class="finding"><span class="fn">06</span><p><b>Nejde o hlasitou menšinu.</b> Google Play dává aplikaci 2,73★ ze 113 hodnocení (12. září 2026) a 64 % těchto hodnocení má i text. Nízké skóre tedy netvoří pár naštvaných lidí — je to hodnocení většiny androidových uživatelů, kteří se vyjádřili.</p></div>
+  <div class="finding"><span class="fn">07</span><p><b>Google Fit jako jediný most je slabé místo.</b> Zmiňuje ho 33 recenzí. Přímé napojení existuje jen na Garmin a právě u Garminu se objevují nejpozitivnější zmínky o synchronizaci.</p></div>
+ </div>
+</section>
+
+<section id="data">
+ <h2>Zdroje dat a metoda</h2>
+ <p class="sec-sub">Analýza pracuje výhradně s recenzemi, které dodal klient. Nic není doplněno z jiných zdrojů.</p>
+ <table class="data">
+  <thead><tr><th>Zdroj</th><th>Recenzí s textem</th><th>Období</th><th>Poznámka</th></tr></thead>
+  <tbody>
+   <tr><td><b>Google Play</b></td><td>72</td><td>22. 12. 2018 – 13. 11. 2025</td><td>Obchod uvádí 113 hodnocení s průměrem 2,73★ (snímek 12. září 2026); text má 64 % z nich. Včetně 42 veřejných odpovědí týmu Mutumutu</td></tr>
+   <tr><td><b>App Store</b> (CZ)</td><td>9</td><td>3. 1. 2020 – 2. 12. 2025</td><td>Obchod uvádí 37 hodnocení s průměrem 3,5★; text má jen 24 % z nich</td></tr>
+   <tr><td><b>Celkem</b></td><td><b>81</b></td><td>7 let</td><td>Průměr textových recenzí 2,3★; průměr všech 150 hodnocení v obou obchodech 2,92★</td></tr>
+  </tbody>
+ </table>
+</section>
+
+<section id="hodnoceni">
+ <h2>Rozdělení hodnocení</h2>
+ <p class="sec-sub">Rozdělení hvězd u textových recenzí a srovnání s celkovými hodnoceními, která obchody uvádějí.</p>
+ <div class="grid2">
+  <div>
+   <h3>Textové recenze, obě platformy</h3>
+   <p class="lead-sm">81 recenzí, průměr 2,3★</p>
+   <svg class="chart" viewBox="0 0 460 204" role="img" preserveAspectRatio="xMinYMin meet">
+<text x="0" y="23.0" class="cl stars" dominant-baseline="middle">★★★★★</text>
+<rect x="92" y="8" width="248" height="28" rx="3" class="track"/>
+<rect x="92" y="8" width="109.4" height="28" rx="3" fill="var(--green)"/>
+<text x="350" y="23.0" class="cv" dominant-baseline="middle">15</text>
+<text x="382" y="23.0" class="cv muted" dominant-baseline="middle">19 %</text>
+<text x="0" y="63.0" class="cl stars" dominant-baseline="middle">★★★★☆</text>
+<rect x="92" y="48" width="248" height="28" rx="3" class="track"/>
+<rect x="92" y="48" width="29.2" height="28" rx="3" fill="var(--green-mid)"/>
+<text x="350" y="63.0" class="cv" dominant-baseline="middle">4</text>
+<text x="382" y="63.0" class="cv muted" dominant-baseline="middle">5 %</text>
+<text x="0" y="103.0" class="cl stars" dominant-baseline="middle">★★★☆☆</text>
+<rect x="92" y="88" width="248" height="28" rx="3" class="track"/>
+<rect x="92" y="88" width="51.1" height="28" rx="3" fill="var(--amber)"/>
+<text x="350" y="103.0" class="cv" dominant-baseline="middle">7</text>
+<text x="382" y="103.0" class="cv muted" dominant-baseline="middle">9 %</text>
+<text x="0" y="143.0" class="cl stars" dominant-baseline="middle">★★☆☆☆</text>
+<rect x="92" y="128" width="248" height="28" rx="3" class="track"/>
+<rect x="92" y="128" width="153.2" height="28" rx="3" fill="var(--red-soft)"/>
+<text x="350" y="143.0" class="cv" dominant-baseline="middle">21</text>
+<text x="382" y="143.0" class="cv muted" dominant-baseline="middle">26 %</text>
+<text x="0" y="183.0" class="cl stars" dominant-baseline="middle">★☆☆☆☆</text>
+<rect x="92" y="168" width="248" height="28" rx="3" class="track"/>
+<rect x="92" y="168" width="248.0" height="28" rx="3" fill="var(--red)"/>
+<text x="350" y="183.0" class="cv" dominant-baseline="middle">34</text>
+<text x="382" y="183.0" class="cv muted" dominant-baseline="middle">42 %</text>
+</svg>
+   <div style="margin-top:30px"><svg class="chart" viewBox="0 0 460 36" role="img" preserveAspectRatio="xMinYMin meet">
+<rect x="0.0" y="0" width="312.3" height="32" fill="var(--red)"/>
+<text x="156.2" y="17.0" class="cin" text-anchor="middle" dominant-baseline="middle">68 %</text>
+<rect x="312.3" y="0" width="39.8" height="32" fill="var(--amber)"/>
+<text x="332.2" y="17.0" class="cin" text-anchor="middle" dominant-baseline="middle">9 %</text>
+<rect x="352.1" y="0" width="107.9" height="32" fill="var(--green)"/>
+<text x="406.0" y="17.0" class="cin" text-anchor="middle" dominant-baseline="middle">23 %</text>
+</svg></div>
+   <div class="legend">
+     <span><i style="background:var(--red)"></i>1–2★ negativní (55)</span>
+     <span><i style="background:var(--amber)"></i>3★ smíšené (7)</span>
+     <span><i style="background:var(--green)"></i>4–5★ pozitivní (19)</span>
+   </div>
+   <p class="cap">Dvě třetiny lidí, kteří si dali práci něco napsat, dali jednu nebo dvě hvězdy.</p>
+  </div>
+  <div>
+   <h3>Celkové hodnocení na App Store</h3>
+   <p class="lead-sm">37 hodnocení včetně těch bez textu, průměr 3,5★</p>
+   <svg class="chart" viewBox="0 0 460 204" role="img" preserveAspectRatio="xMinYMin meet">
+<text x="0" y="23.0" class="cl stars" dominant-baseline="middle">★★★★★</text>
+<rect x="92" y="8" width="248" height="28" rx="3" class="track"/>
+<rect x="92" y="8" width="248.0" height="28" rx="3" fill="var(--green)"/>
+<text x="350" y="23.0" class="cv" dominant-baseline="middle">21</text>
+<text x="382" y="23.0" class="cv muted" dominant-baseline="middle">57 %</text>
+<text x="0" y="63.0" class="cl stars" dominant-baseline="middle">★★★★☆</text>
+<rect x="92" y="48" width="248" height="28" rx="3" class="track"/>
+<rect x="92" y="48" width="23.6" height="28" rx="3" fill="var(--green-mid)"/>
+<text x="350" y="63.0" class="cv" dominant-baseline="middle">2</text>
+<text x="382" y="63.0" class="cv muted" dominant-baseline="middle">5 %</text>
+<text x="0" y="103.0" class="cl stars" dominant-baseline="middle">★★★☆☆</text>
+<rect x="92" y="88" width="248" height="28" rx="3" class="track"/>
+<rect x="92" y="88" width="23.6" height="28" rx="3" fill="var(--amber)"/>
+<text x="350" y="103.0" class="cv" dominant-baseline="middle">2</text>
+<text x="382" y="103.0" class="cv muted" dominant-baseline="middle">5 %</text>
+<text x="0" y="143.0" class="cl stars" dominant-baseline="middle">★★☆☆☆</text>
+<rect x="92" y="128" width="248" height="28" rx="3" class="track"/>
+<rect x="92" y="128" width="59.0" height="28" rx="3" fill="var(--red-soft)"/>
+<text x="350" y="143.0" class="cv" dominant-baseline="middle">5</text>
+<text x="382" y="143.0" class="cv muted" dominant-baseline="middle">14 %</text>
+<text x="0" y="183.0" class="cl stars" dominant-baseline="middle">★☆☆☆☆</text>
+<rect x="92" y="168" width="248" height="28" rx="3" class="track"/>
+<rect x="92" y="168" width="82.7" height="28" rx="3" fill="var(--red)"/>
+<text x="350" y="183.0" class="cv" dominant-baseline="middle">7</text>
+<text x="382" y="183.0" class="cv muted" dominant-baseline="middle">19 %</text>
+</svg>
+   <p class="cap">Na iOS platí, co se dá čekat: většina lidí, kteří hodnotí bez komentáře, je spokojená. Na Androidu to tak jednoznačné není — viz srovnání níže.</p>
+  </div>
+ </div>
+
+ <div style="margin-top:56px">
+  <h3>Hodnocení s textem a bez textu</h3>
+  <p class="lead-sm">Průměrné hodnocení podle toho, jestli k němu uživatel napsal text. Snímek celkových hodnocení z obchodů je k 12. září 2026.</p>
+  <svg class="chart" viewBox="0 0 1000 170" role="img" preserveAspectRatio="xMinYMin meet">
+<text x="0" y="23.0" class="cl" dominant-baseline="middle">Google Play — všech 113 hodnocení</text>
+<rect x="320" y="8" width="614" height="28" rx="3" class="track"/>
+<rect x="320" y="8" width="335.2" height="28" rx="3" fill="var(--green-deep)"/>
+<text x="944" y="23.0" class="cv" dominant-baseline="middle">2,73★</text>
+<text x="0" y="65.0" class="cl" dominant-baseline="middle">Google Play — 72 recenzí s textem</text>
+<rect x="320" y="50" width="614" height="28" rx="3" class="track"/>
+<rect x="320" y="50" width="276.3" height="28" rx="3" fill="var(--green-mid)"/>
+<text x="944" y="65.0" class="cv" dominant-baseline="middle">2,25★</text>
+<text x="0" y="107.0" class="cl" dominant-baseline="middle">App Store — všech 37 hodnocení</text>
+<rect x="320" y="92" width="614" height="28" rx="3" class="track"/>
+<rect x="320" y="92" width="429.8" height="28" rx="3" fill="var(--green-deep)"/>
+<text x="944" y="107.0" class="cv" dominant-baseline="middle">3,50★</text>
+<text x="0" y="149.0" class="cl" dominant-baseline="middle">App Store — 9 recenzí s textem</text>
+<rect x="320" y="134" width="614" height="28" rx="3" class="track"/>
+<rect x="320" y="134" width="354.8" height="28" rx="3" fill="var(--green-mid)"/>
+<text x="944" y="149.0" class="cv" dominant-baseline="middle">2,89★</text>
+</svg>
+  <div class="legend">
+    <span><i style="background:var(--green-deep)"></i>všechna hodnocení v obchodě</span>
+    <span><i style="background:var(--green-mid)"></i>jen hodnocení s napsanou recenzí</span>
+  </div>
+ </div>
+
+ <div class="callout" style="margin-top:36px">
+  <h4>Interpretace rozdílu</h4>
+  <p>Textové recenze bývají zkreslené směrem k nespokojenosti — spokojený uživatel jen klikne na hvězdičky. Na App Store je to vidět: 37 hodnocení má průměr 3,5★, ale devět recenzí s textem jen 2,89★. <b>Na Google Play je ale rozdíl malý</b> — celý obchod dává 2,73★ ze 113 hodnocení, recenze s textem 2,25★. A protože text má 64 % všech androidových hodnocení, nejde o hlasitou menšinu, ale o většinu hodnotících. Na Androidu tedy nejde o okrajové stížnosti, ale o zkušenost většiny hodnotících uživatelů.</p>
+ </div>
+</section>
+
+<section id="cas">
+ <h2>Vývoj v čase</h2>
+ <p class="sec-sub">Průměrné hodnocení textových recenzí podle roku. Sloupce v pozadí ukazují, kolik recenzí v daném roce vzniklo.</p>
+ <svg class="chart" viewBox="0 0 1000 320" role="img" preserveAspectRatio="xMinYMin meet">
+<line x1="34" x2="984" y1="274.0" y2="274.0" class="grid"/>
+<text x="25" y="274.0" class="ct" text-anchor="end" dominant-baseline="middle">1★</text>
+<line x1="34" x2="984" y1="210.0" y2="210.0" class="grid"/>
+<text x="25" y="210.0" class="ct" text-anchor="end" dominant-baseline="middle">2★</text>
+<line x1="34" x2="984" y1="146.0" y2="146.0" class="grid"/>
+<text x="25" y="146.0" class="ct" text-anchor="end" dominant-baseline="middle">3★</text>
+<line x1="34" x2="984" y1="82.0" y2="82.0" class="grid"/>
+<text x="25" y="82.0" class="ct" text-anchor="end" dominant-baseline="middle">4★</text>
+<line x1="34" x2="984" y1="18.0" y2="18.0" class="grid"/>
+<text x="25" y="18.0" class="ct" text-anchor="end" dominant-baseline="middle">5★</text>
+<rect x="68.4" y="269.1" width="49.9" height="4.9" rx="2" class="vol"/>
+<rect x="187.2" y="230.0" width="49.9" height="44.0" rx="2" class="vol"/>
+<rect x="305.9" y="220.2" width="49.9" height="53.8" rx="2" class="vol"/>
+<rect x="424.7" y="166.5" width="49.9" height="107.5" rx="2" class="vol"/>
+<rect x="543.4" y="205.6" width="49.9" height="68.4" rx="2" class="vol"/>
+<rect x="662.2" y="254.5" width="49.9" height="19.5" rx="2" class="vol"/>
+<rect x="780.9" y="234.9" width="49.9" height="39.1" rx="2" class="vol"/>
+<rect x="899.7" y="215.4" width="49.9" height="58.6" rx="2" class="vol"/>
+<polyline points="93.4,18.0 212.1,131.8 330.9,180.9 449.6,204.2 568.4,182.6 687.1,258.0 805.9,218.0 924.6,194.0" fill="none" stroke="var(--green-deep)" stroke-width="2.5" stroke-linejoin="round"/>
+<circle cx="93.4" cy="18.0" r="5" fill="var(--paper)" stroke="var(--green-deep)" stroke-width="2.5"/>
+<text x="93.4" y="3.0" class="ct bold" text-anchor="middle">5,0</text>
+<circle cx="212.1" cy="131.8" r="5" fill="var(--paper)" stroke="var(--green-deep)" stroke-width="2.5"/>
+<text x="212.1" y="116.8" class="ct bold" text-anchor="middle">3,2</text>
+<circle cx="330.9" cy="180.9" r="5" fill="var(--paper)" stroke="var(--green-deep)" stroke-width="2.5"/>
+<text x="330.9" y="165.9" class="ct bold" text-anchor="middle">2,5</text>
+<circle cx="449.6" cy="204.2" r="5" fill="var(--paper)" stroke="var(--green-deep)" stroke-width="2.5"/>
+<text x="449.6" y="189.2" class="ct bold" text-anchor="middle">2,1</text>
+<circle cx="568.4" cy="182.6" r="5" fill="var(--paper)" stroke="var(--green-deep)" stroke-width="2.5"/>
+<text x="568.4" y="167.6" class="ct bold" text-anchor="middle">2,4</text>
+<circle cx="687.1" cy="258.0" r="5" fill="var(--paper)" stroke="var(--green-deep)" stroke-width="2.5"/>
+<text x="687.1" y="243.0" class="ct bold" text-anchor="middle">1,2</text>
+<circle cx="805.9" cy="218.0" r="5" fill="var(--paper)" stroke="var(--green-deep)" stroke-width="2.5"/>
+<text x="805.9" y="203.0" class="ct bold" text-anchor="middle">1,9</text>
+<circle cx="924.6" cy="194.0" r="5" fill="var(--paper)" stroke="var(--green-deep)" stroke-width="2.5"/>
+<text x="924.6" y="179.0" class="ct bold" text-anchor="middle">2,2</text>
+<text x="93.4" y="294" class="ct" text-anchor="middle">2018</text>
+<text x="93.4" y="310" class="ct muted" text-anchor="middle">1</text>
+<text x="212.1" y="294" class="ct" text-anchor="middle">2019</text>
+<text x="212.1" y="310" class="ct muted" text-anchor="middle">9</text>
+<text x="330.9" y="294" class="ct" text-anchor="middle">2020</text>
+<text x="330.9" y="310" class="ct muted" text-anchor="middle">11</text>
+<text x="449.6" y="294" class="ct" text-anchor="middle">2021</text>
+<text x="449.6" y="310" class="ct muted" text-anchor="middle">22</text>
+<text x="568.4" y="294" class="ct" text-anchor="middle">2022</text>
+<text x="568.4" y="310" class="ct muted" text-anchor="middle">14</text>
+<text x="687.1" y="294" class="ct" text-anchor="middle">2023</text>
+<text x="687.1" y="310" class="ct muted" text-anchor="middle">4</text>
+<text x="805.9" y="294" class="ct" text-anchor="middle">2024</text>
+<text x="805.9" y="310" class="ct muted" text-anchor="middle">8</text>
+<text x="924.6" y="294" class="ct" text-anchor="middle">2025</text>
+<text x="924.6" y="310" class="ct muted" text-anchor="middle">12</text>
+</svg>
+ <p class="cap">Od roku 2020 se průměr textových recenzí drží mezi 1,3★ a 2,5★. Roky 2023 a 2024 mají malý vzorek (4 a 8 recenzí), takže je nelze přeceňovat — trvalý je ale samotný fakt, že se hodnocení nikdy nevrátilo nad tři hvězdy.</p>
+
+ <div style="margin-top:52px">
+  <h3>Stížnosti na přenos dat podle roku</h3>
+  <p class="lead-sm">Počet recenzí, které v daném roce zmiňují nepřenesená nebo chybějící data.</p>
+  <svg class="chart" viewBox="0 0 1000 250" role="img" preserveAspectRatio="xMinYMin meet">
+<line x1="8" x2="992" y1="210" y2="210" class="grid"/>
+<rect x="41.5" y="210.0" width="56.0" height="1.5" rx="3" fill="var(--green)"/>
+<text x="69.5" y="202.0" class="ct bold" text-anchor="middle">0</text>
+<text x="69.5" y="230" class="ct" text-anchor="middle">2018</text>
+<rect x="164.5" y="147.3" width="56.0" height="62.7" rx="3" fill="var(--green)"/>
+<text x="192.5" y="139.3" class="ct bold" text-anchor="middle">4</text>
+<text x="192.5" y="230" class="ct" text-anchor="middle">2019</text>
+<rect x="287.5" y="131.7" width="56.0" height="78.3" rx="3" fill="var(--green)"/>
+<text x="315.5" y="123.7" class="ct bold" text-anchor="middle">5</text>
+<text x="315.5" y="230" class="ct" text-anchor="middle">2020</text>
+<rect x="410.5" y="22.0" width="56.0" height="188.0" rx="3" fill="var(--green)"/>
+<text x="438.5" y="14.0" class="ct bold" text-anchor="middle">12</text>
+<text x="438.5" y="230" class="ct" text-anchor="middle">2021</text>
+<rect x="533.5" y="116.0" width="56.0" height="94.0" rx="3" fill="var(--green)"/>
+<text x="561.5" y="108.0" class="ct bold" text-anchor="middle">6</text>
+<text x="561.5" y="230" class="ct" text-anchor="middle">2022</text>
+<rect x="656.5" y="194.3" width="56.0" height="15.7" rx="3" fill="var(--green)"/>
+<text x="684.5" y="186.3" class="ct bold" text-anchor="middle">1</text>
+<text x="684.5" y="230" class="ct" text-anchor="middle">2023</text>
+<rect x="779.5" y="131.7" width="56.0" height="78.3" rx="3" fill="var(--green)"/>
+<text x="807.5" y="123.7" class="ct bold" text-anchor="middle">5</text>
+<text x="807.5" y="230" class="ct" text-anchor="middle">2024</text>
+<rect x="902.5" y="116.0" width="56.0" height="94.0" rx="3" fill="var(--green)"/>
+<text x="930.5" y="108.0" class="ct bold" text-anchor="middle">6</text>
+<text x="930.5" y="230" class="ct" text-anchor="middle">2025</text>
+</svg>
+  <p class="cap">Problém je přítomný v každém jednotlivém roce od 2019. Nejde tedy o dílčí chybu jedné verze, ale o dlouhodobý stav přenosu dat.</p>
+ </div>
+</section>
+
+<section id="painy">
+ <h2>Největší pain body uživatelů</h2>
+ <p class="sec-sub">Sedm kategorií seřazených podle toho, jak často se v recenzích objevují. U každé je uveden i průměr hodnocení recenzí, které ji zmiňují — tedy jak moc daný problém sráží celkovou spokojenost.</p>
+ <p class="lead-sm">Sedm recenzí přitom v jednom textu chválí pojištění a zároveň kritizuje aplikaci:</p>
+ <div class="praise" style="margin-bottom:34px">
+  <figure class="q">
+<blockquote>„Myšlenka jednoduchého zdravého životního pojištění je super, ale ta aplikace, to je opravdu děs.…“</blockquote>
+<figcaption><span class="st">★★<span class="st-off">☆☆☆</span></span><span class="q-au">Kateřina Rydvalová</span><span class="q-me">Google Play</span><span class="q-me">26. dubna 2021</span></figcaption>
+</figure>
+  <figure class="q">
+<blockquote>„Proti pojištění nic nemám, ale aplikace mi doslova pije krev.…“</blockquote>
+<figcaption><span class="st">★★<span class="st-off">☆☆☆</span></span><span class="q-au">Karol Řezníček</span><span class="q-me">Google Play</span><span class="q-me">13. července 2021</span></figcaption>
+</figure>
+ </div>
+ <div class="chart-block"><svg class="chart" viewBox="0 0 1000 451" role="img" preserveAspectRatio="xMinYMin meet">
+<text x="0" y="24.0" class="cl" dominant-baseline="middle">Přenos a synchronizace dat</text>
+<rect x="320" y="8" width="614" height="30" rx="3" class="track"/>
+<rect x="320" y="8" width="614.0" height="30" rx="3" fill="var(--green-deep)"/>
+<text x="944" y="24.0" class="cv" dominant-baseline="middle">39</text>
+<text x="0" y="69.0" class="cl" dominant-baseline="middle">Stabilita a rychlost</text>
+<rect x="320" y="53" width="614" height="30" rx="3" class="track"/>
+<rect x="320" y="53" width="220.4" height="30" rx="3" fill="var(--green)"/>
+<text x="944" y="69.0" class="cv" dominant-baseline="middle">14</text>
+<text x="0" y="114.0" class="cl" dominant-baseline="middle">Chybějící napojení ekosystémů</text>
+<rect x="320" y="98" width="614" height="30" rx="3" class="track"/>
+<rect x="320" y="98" width="204.7" height="30" rx="3" fill="var(--green)"/>
+<text x="944" y="114.0" class="cv" dominant-baseline="middle">13</text>
+<text x="0" y="159.0" class="cl" dominant-baseline="middle">Nepřesné počítání aktivit</text>
+<rect x="320" y="143" width="614" height="30" rx="3" class="track"/>
+<rect x="320" y="143" width="188.9" height="30" rx="3" fill="var(--green)"/>
+<text x="944" y="159.0" class="cv" dominant-baseline="middle">12</text>
+<text x="0" y="204.0" class="cl" dominant-baseline="middle">Přihlašování a odhlašování</text>
+<rect x="320" y="188" width="614" height="30" rx="3" class="track"/>
+<rect x="320" y="188" width="157.4" height="30" rx="3" fill="var(--green)"/>
+<text x="944" y="204.0" class="cv" dominant-baseline="middle">10</text>
+<text x="0" y="249.0" class="cl" dominant-baseline="middle">Hrozba odchodu, ztráta slevy</text>
+<rect x="320" y="233" width="614" height="30" rx="3" class="track"/>
+<rect x="320" y="233" width="157.4" height="30" rx="3" fill="var(--green-pale)"/>
+<text x="944" y="249.0" class="cv" dominant-baseline="middle">10</text>
+<text x="0" y="294.0" class="cl" dominant-baseline="middle">Měření na sportovišti a poloha</text>
+<rect x="320" y="278" width="614" height="30" rx="3" class="track"/>
+<rect x="320" y="278" width="125.9" height="30" rx="3" fill="var(--green)"/>
+<text x="944" y="294.0" class="cv" dominant-baseline="middle">8</text>
+<text x="0" y="339.0" class="cl" dominant-baseline="middle">Regrese po aktualizaci</text>
+<rect x="320" y="323" width="614" height="30" rx="3" class="track"/>
+<rect x="320" y="323" width="125.9" height="30" rx="3" fill="var(--green)"/>
+<text x="944" y="339.0" class="cv" dominant-baseline="middle">8</text>
+<text x="0" y="384.0" class="cl" dominant-baseline="middle">Zkušenost s podporou</text>
+<rect x="320" y="368" width="614" height="30" rx="3" class="track"/>
+<rect x="320" y="368" width="78.7" height="30" rx="3" fill="var(--green-pale)"/>
+<text x="944" y="384.0" class="cv" dominant-baseline="middle">5</text>
+<text x="0" y="429.0" class="cl" dominant-baseline="middle">Přehlednost a ovládání</text>
+<rect x="320" y="413" width="614" height="30" rx="3" class="track"/>
+<rect x="320" y="413" width="63.0" height="30" rx="3" fill="var(--green-pale)"/>
+<text x="944" y="429.0" class="cv" dominant-baseline="middle">4</text>
+</svg></div>
+ <div class="legend">
+   <span><i style="background:var(--green)"></i>produktové pain body, rozebrané níže</span>
+   <span><i style="background:var(--green-pale)"></i>průřezová témata</span>
+ </div>
+ <p class="cap">Jedna recenze často popisuje víc problémů najednou, součet je proto vyšší než 81. Sedm produktových kategorií je níže rozebráno jednotlivě; hrozba odchodu, zkušenost s podporou a přehlednost prostupují všemi ostatními a věnujeme se jim v samostatných částech.</p>
+ <article class="pain" id="pain-sync">
+  <div class="pain-head">
+    <span class="pain-rank">1</span>
+    <div>
+      <h3>Data z hodinek a fitness aplikací nedorazí</h3>
+      <div class="pain-stats">
+        <span><b>39</b> z 81 recenzí</span>
+        <span><b>48 %</b> podíl</span>
+        <span><b>1,8★</b> průměr těchto recenzí</span>
+      </div>
+    </div>
+  </div>
+  <p class="lead-sm">Nejčastější a nejtrvalejší problém celého datasetu. Uživatel odsportuje, data vidí v Google Fitu nebo v hodinkách, ale v Mutumutu se neobjeví — buď vůbec, nebo se zpožděním, nebo jen část. Objevuje se v každém roce od roku 2019 a přežilo všechny verze aplikace, od 2.5.3 po 4.16.2 a iOS 5.0.</p>
+  <div class="quotes"><figure class="q">
+<blockquote>„…Téměř žádná synchronizace. Například týden v G.fitu mám přes 15.000 v mutu &quot;žádná aktivita&quot;, ani po měsíci snažení se to do aplikace dostat (reinstalování, odpolední,veškeré souhlasy,opětovné spárování,atd...) ani ťuk.…“</blockquote>
+<figcaption><span class="st">★<span class="st-off">☆☆☆☆</span></span><span class="q-au">Karel Mlejnek</span><span class="q-me">Google Play</span><span class="q-me">26. září 2021</span></figcaption>
+</figure>
+<figure class="q">
+<blockquote>„Od 16.3 nelze aplikaci sesynchronizovat s Google fit. Takže veškerá aktivita zbytečná, nic se mi nepřičítá. Nepomáhá odinstalovat, restartovat nic 🤬“</blockquote>
+<figcaption><span class="st">★★<span class="st-off">☆☆☆</span></span><span class="q-au">Veronika Petru</span><span class="q-me">Google Play</span><span class="q-me">27. března 2024</span></figcaption>
+</figure>
+<figure class="q">
+<blockquote>„Také mě to už nebaví, nenačítá aktivity z Google Fit. Po reinstalování funguje pár dní a pak to zase nenačítá.“</blockquote>
+<figcaption><span class="st">★★<span class="st-off">☆☆☆</span></span><span class="q-au">Vaclav Horak</span><span class="q-me">Google Play</span><span class="q-me">2. března 2022</span></figcaption>
+</figure>
+<figure class="q">
+<blockquote>„Pokud aplikaci neotevru nekolikrat denne abych nacetl aktivity nechce je pak bud nacist vubec nebo klidne preskoci i cely den.…“</blockquote>
+<figcaption><span class="st">★★<span class="st-off">☆☆☆</span></span><span class="q-au">mever1ck</span><span class="q-me">App Store</span><span class="q-me">7. září 2025</span></figcaption>
+</figure></div>
+  <div class="insight"><h4>Interpretace</h4><p>Uživatelé opakovaně popisují stejný vzorec: reinstalace pomůže na pár dní, pak se problém vrátí. To ukazuje spíš na křehký mechanismus obnovy tokenů a chybějící background sync než na jednorázovou chybu. Sedm uživatelů zároveň píše, že musí aplikaci hlídat a otevírat ručně — tedy že přenos dat je fakticky manuální úkon.</p></div>
+</article>
+<article class="pain" id="pain-stability">
+  <div class="pain-head">
+    <span class="pain-rank">2</span>
+    <div>
+      <h3>Aplikace padá, zamrzá nebo se vůbec nespustí</h3>
+      <div class="pain-stats">
+        <span><b>14</b> z 81 recenzí</span>
+        <span><b>17 %</b> podíl</span>
+        <span><b>1,5★</b> průměr těchto recenzí</span>
+      </div>
+    </div>
+  </div>
+  <p class="lead-sm">Druhá nejčastější stížnost. Pády typicky nastanou hned po startu nebo po zadání přihlašovacího kódu, takže uživatel se do aplikace vůbec nedostane. Standardní rada, kterou si uživatelé předávají, je odinstalovat a nainstalovat znovu.</p>
+  <div class="quotes"><figure class="q">
+<blockquote>„Aplikace začala padat a symbol sportovce aplikaci okamžitě schodi.“</blockquote>
+<figcaption><span class="st">★<span class="st-off">☆☆☆☆</span></span><span class="q-au">Roman</span><span class="q-me">Google Play</span><span class="q-me">11. listopadu 2025</span></figcaption>
+</figure>
+<figure class="q">
+<blockquote>„Aplikace má věčně problémy, pokaždé při spuštění hlásí problém a trvá než se vůbec plně otevře…“</blockquote>
+<figcaption><span class="st">★<span class="st-off">☆☆☆☆</span></span><span class="q-au">Susan B</span><span class="q-me">Google Play</span><span class="q-me">29. března 2021</span></figcaption>
+</figure>
+<figure class="q">
+<blockquote>„Aplikace velmi často zamrzá na úvodní obrazovce a nespustí se.…“</blockquote>
+<figcaption><span class="st">★★<span class="st-off">☆☆☆</span></span><span class="q-au">Vojtěch Ruschka</span><span class="q-me">Google Play</span><span class="q-me">5. září 2022</span></figcaption>
+</figure>
+<figure class="q">
+<blockquote>„Update od update mi prijde, ze appka je pomalejsi a pomalejsi a casteji pada“</blockquote>
+<figcaption><span class="st">★★<span class="st-off">☆☆☆</span></span><span class="q-au">Josef z Prahy</span><span class="q-me">App Store</span><span class="q-me">20. května 2020</span></figcaption>
+</figure></div>
+  <div class="insight"><h4>Interpretace</h4><p>Recenze zmiňující pády mají nejnižší průměrné hodnocení ze všech kategorií (1,5★). Pád při startu je zároveň nejdražší typ chyby — uživatel se nedostane ani k obsahu, který ho drží, tedy k bodům a slevě.</p></div>
+</article>
+<article class="pain" id="pain-integration">
+  <div class="pain-head">
+    <span class="pain-rank">3</span>
+    <div>
+      <h3>Chybí napojení na ekosystémy, které lidé reálně používají</h3>
+      <div class="pain-stats">
+        <span><b>13</b> z 81 recenzí</span>
+        <span><b>16 %</b> podíl</span>
+        <span><b>2,7★</b> průměr těchto recenzí</span>
+      </div>
+    </div>
+  </div>
+  <p class="lead-sm">Aplikace historicky stojí na Google Fitu jako prostředníkovi. Uživatelé s Huawei, Samsungem, Xiaomi nebo Apple Watch tak potřebují dvě až tři aplikace v řetězci, aby se jejich pohyb vůbec dostal k Mutumutu. Každý článek řetězu je další místo, kde se přenos rozpadne.</p>
+  <div class="quotes"><figure class="q">
+<blockquote>„Aplikace bohužel nepodporuje získání dat přes Health Connect, což je nástupce Google Fit.“</blockquote>
+<figcaption><span class="st">★★<span class="st-off">☆☆☆</span></span><span class="q-au">Lukáš Neoproud</span><span class="q-me">Google Play</span><span class="q-me">12. května 2025</span></figcaption>
+</figure>
+<figure class="q">
+<blockquote>„…Pominu to, že musím mít 2 další aplikace, aby se tam ta data dostala.…“</blockquote>
+<figcaption><span class="st">★★<span class="st-off">☆☆☆</span></span><span class="q-au">Kateřina Rydvalová</span><span class="q-me">Google Play</span><span class="q-me">26. dubna 2021</span></figcaption>
+</figure>
+<figure class="q">
+<blockquote>„…Chybí propojenost se Samsung Health, upřímně Google Fit je na nic, často vynechává kroky.…“</blockquote>
+<figcaption><span class="st">★★<span class="st-off">☆☆☆</span></span><span class="q-au">Petr Skřivánek</span><span class="q-me">Google Play</span><span class="q-me">13. března 2021</span></figcaption>
+</figure>
+<figure class="q">
+<blockquote>„…Bylo by skvělé mít Mutumutu aplikaci přímo pro hodinky, nebo alespoň možnost, aby aplikace zaznamenávala více typů aktivit přímo z hodinek. Jinak je ale aplikace velmi motivující – doporučuji všem! 🙂“</blockquote>
+<figcaption><span class="st">★★★★<span class="st-off">☆</span></span><span class="q-au">PalinkoD</span><span class="q-me">App Store</span><span class="q-me">3. října 2024</span></figcaption>
+</figure></div>
+  <div class="insight"><h4>Interpretace</h4><p>Zmínka o Health Connect je klíčová a je z května 2025. Health Connect je nástupce Google Fitu na Androidu; dokud na něj aplikace nepřejde, bude část androidových uživatelů odříznutá bez ohledu na to, jak dobře je zbytek aplikace napsaný. Přímé napojení funguje jen na Garmin — a právě u Garminu se objevují nejpozitivnější zmínky o synchronizaci.</p></div>
+</article>
+<article class="pain" id="pain-accuracy">
+  <div class="pain-head">
+    <span class="pain-rank">4</span>
+    <div>
+      <h3>Body a kroky nesedí, aktivity se ztrácejí nebo mění</h3>
+      <div class="pain-stats">
+        <span><b>12</b> z 81 recenzí</span>
+        <span><b>15 %</b> podíl</span>
+        <span><b>1,7★</b> průměr těchto recenzí</span>
+      </div>
+    </div>
+  </div>
+  <p class="lead-sm">Odlišná kategorie od přenosu dat: tady data dorazí, ale v jiné podobě. Uživatelé popisují rozdíly proti zdrojové aplikaci, zpětné ubývání bodů, běh započítaný jako chůze a aktivity započítané dvakrát.</p>
+  <div class="quotes"><figure class="q">
+<blockquote>„…I když je s Google Fit propojeno v pořádku, tak v GF 14.000 kroků, ale v Mutu 1.800... Běh si to počítá jak chce, občas radši vůbec.…“</blockquote>
+<figcaption><span class="st">★<span class="st-off">☆☆☆☆</span></span><span class="q-au">N. F.</span><span class="q-me">Google Play</span><span class="q-me">6. prosince 2024</span></figcaption>
+</figure>
+<figure class="q">
+<blockquote>„…Vcera vecer jsem mel 270 bodu ale dnes rano po synchronizaci s google fitem jsem mel najednou 220 bodu.…“</blockquote>
+<figcaption><span class="st">★<span class="st-off">☆☆☆☆</span></span><span class="q-au">Oldrich Honek</span><span class="q-me">Google Play</span><span class="q-me">28. června 2020</span></figcaption>
+</figure>
+<figure class="q">
+<blockquote>„…dnes mě aplikace okradla.o kroky za cca 8 km rychle chůze.takze nemám ani těch 5 bodu…“</blockquote>
+<figcaption><span class="st">★<span class="st-off">☆☆☆☆</span></span><span class="q-au">Emilie Hofrová</span><span class="q-me">Google Play</span><span class="q-me">29. ledna 2021</span></figcaption>
+</figure>
+<figure class="q">
+<blockquote>„…30 nebo 45 minut běhu se započíta jako chůze, protože kroky to odešle, ale jine aktivity ne…“</blockquote>
+<figcaption><span class="st">★★<span class="st-off">☆☆☆</span></span><span class="q-au">Karol Řezníček</span><span class="q-me">Google Play</span><span class="q-me">13. července 2021</span></figcaption>
+</figure></div>
+  <div class="insight"><h4>Interpretace</h4><p>Kategorie s přímým dopadem na důvěru v systém bodů. Deduplikace kroků mezi telefonem a náramkem je technicky legitimní, ale uživatel vidí jen to, že mu body zmizely — a použije slovo „okradla“. Chybí viditelný audit trail, kde by si člověk ověřil, co se započítalo, z jakého zdroje a proč.</p></div>
+</article>
+<article class="pain" id="pain-auth">
+  <div class="pain-head">
+    <span class="pain-rank">5</span>
+    <div>
+      <h3>Aplikace odhlašuje a přihlášení přes kód z e-mailu zdržuje</h3>
+      <div class="pain-stats">
+        <span><b>10</b> z 81 recenzí</span>
+        <span><b>12 %</b> podíl</span>
+        <span><b>1,8★</b> průměr těchto recenzí</span>
+      </div>
+    </div>
+  </div>
+  <p class="lead-sm">Aplikace uživatele opakovaně odhlásí a jediná cesta zpět vede přes jednorázový kód z e-mailu. Někdy kód nefunguje, jindy aplikace po jeho zadání spadne. Zároveň to znamená, že uživatel se nemůže rychle podívat na body.</p>
+  <div class="quotes"><figure class="q">
+<blockquote>„Propojení s Google Fit je dost špatný a appka mě neustále odhlašuje, čili pokaždé se musím přihlásit znovu včetně opisování kódu z emailu... To je tak těžké udělat aspoň trochu funkční věc?“</blockquote>
+<figcaption><span class="st">★★<span class="st-off">☆☆☆</span></span><span class="q-au">S. P.</span><span class="q-me">Google Play</span><span class="q-me">27. března 2021</span></figcaption>
+</figure>
+<figure class="q">
+<blockquote>„Aplikace mě jednou za čas odhlásí a nelze se pak přihlásit, i když to zkouším vícekrát po sobě, kód z emailu je pokaždé neplatný.…“</blockquote>
+<figcaption><span class="st">★★<span class="st-off">☆☆☆</span></span><span class="q-au">Aleš Pouzar</span><span class="q-me">Google Play</span><span class="q-me">12. října 2021</span></figcaption>
+</figure>
+<figure class="q">
+<blockquote>„Aplikace se pořád odhlašuje a nemůžu si nastavit heslo - jediná možnost je ověřování přes email a to je otrava.…“</blockquote>
+<figcaption><span class="st">★★★★<span class="st-off">☆</span></span><span class="q-au">PalinkoD</span><span class="q-me">App Store</span><span class="q-me">3. října 2024</span></figcaption>
+</figure>
+<figure class="q">
+<blockquote>„Aplikace stále padá po zadání kódu z emailu“</blockquote>
+<figcaption><span class="st">★<span class="st-off">☆☆☆☆</span></span><span class="q-au">Radek Belohoubek</span><span class="q-me">Google Play</span><span class="q-me">20. listopadu 2023</span></figcaption>
+</figure></div>
+  <div class="insight"><h4>Interpretace</h4><p>Přihlašování se objevuje průběžně od roku 2019 do roku 2024, tedy napříč celou dobou. Kombinace „odhlásí mě“ a „po zadání kódu spadne“ vytváří slepou uličku, ze které se běžný uživatel sám nedostane.</p></div>
+</article>
+<article class="pain" id="pain-venue">
+  <div class="pain-head">
+    <span class="pain-rank">6</span>
+    <div>
+      <h3>Měření na sportovišti, poloha a ruční start cvičení</h3>
+      <div class="pain-stats">
+        <span><b>8</b> z 81 recenzí</span>
+        <span><b>10 %</b> podíl</span>
+        <span><b>2,0★</b> průměr těchto recenzí</span>
+      </div>
+    </div>
+  </div>
+  <p class="lead-sm">Aby se cvičení počítalo, uživatel musí vybrat sportoviště a spustit měření v aplikaci. Měření se ale samo přeruší, sportoviště v databázi chybí, běh v lese zapsat nejde a aplikace chce trvalý přístup k poloze.</p>
+  <div class="quotes"><figure class="q">
+<blockquote>„Pri cviceni na sportovisti se pravidelne po par minutach prerusi mereni (samozrejme bez meho vedomi), takze se mi nezapocita zadna aktivita…“</blockquote>
+<figcaption><span class="st">★<span class="st-off">☆☆☆☆</span></span><span class="q-au">Olga Maděrová</span><span class="q-me">Google Play</span><span class="q-me">23. května 2023</span></figcaption>
+</figure>
+<figure class="q">
+<blockquote>„…Běhání v lese zapsat nelze, protože musíte zvolit sportoviště.…“</blockquote>
+<figcaption><span class="st">★<span class="st-off">☆☆☆☆</span></span><span class="q-au">N. F.</span><span class="q-me">Google Play</span><span class="q-me">6. prosince 2024</span></figcaption>
+</figure>
+<figure class="q">
+<blockquote>„Nerozumím tomu, proč aplikace vyžaduje trvalý přístup k poloze, když by ji mělo stačit jen během používání.…“</blockquote>
+<figcaption><span class="st">★★<span class="st-off">☆☆☆</span></span><span class="q-au">Petr Skřivánek</span><span class="q-me">Google Play</span><span class="q-me">13. března 2021</span></figcaption>
+</figure>
+<figure class="q">
+<blockquote>„…nastavování nějakého pseudosportoviste a měření aktivity v aplikaci Mutumutu. Cvičím ve vlastním fitcentru. A běžně nastavuji Google Fit při cvičení a toto mi přijde jako duplicita.…“</blockquote>
+<figcaption><span class="st">★★★<span class="st-off">☆☆</span></span><span class="q-au">Jugularis</span><span class="q-me">Google Play</span><span class="q-me">9. září 2020</span></figcaption>
+</figure></div>
+  <div class="insight"><h4>Interpretace</h4><p>Nejde o chybu v kódu, ale o návrh mechaniky. Anti-fraud pravidlo dopadá na poctivé uživatele; jeden z nich to shrnuje jako „buzerace poctivých“. Chybí i drobnosti, které by mechaniku zachránily — notifikace v liště, že měření běží, a připomenutí ukončení.</p></div>
+</article>
+<article class="pain" id="pain-regression">
+  <div class="pain-head">
+    <span class="pain-rank">7</span>
+    <div>
+      <h3>Každá větší aktualizace přinese novou vlnu problémů</h3>
+      <div class="pain-stats">
+        <span><b>8</b> z 81 recenzí</span>
+        <span><b>10 %</b> podíl</span>
+        <span><b>2,0★</b> průměr těchto recenzí</span>
+      </div>
+    </div>
+  </div>
+  <p class="lead-sm">Osm recenzí explicitně datuje začátek problému konkrétní aktualizací. Nejde o jednorázový výpadek: stejný vzorec se opakuje v letech 2020, 2021, 2025.</p>
+  <div class="quotes"><figure class="q">
+<blockquote>„Od aktualizace 9.9.2021 se mi nesynchronisuji data mám zapnuté Gfit takřka pořád a data nikde. Jinak do poslední aktualizace byla app bez problémů.“</blockquote>
+<figcaption><span class="st">★★<span class="st-off">☆☆☆</span></span><span class="q-au">Martin Podaný</span><span class="q-me">Google Play</span><span class="q-me">11. října 2021</span></figcaption>
+</figure>
+<figure class="q">
+<blockquote>„Od aktualizace na verzi 5.0 připisuje jen kroky ale běh a kolo už ne. Chtělo by to opravu.“</blockquote>
+<figcaption><span class="st">★<span class="st-off">☆☆☆☆</span></span><span class="q-au">Joeydevil</span><span class="q-me">App Store</span><span class="q-me">29. listopadu 2025</span></figcaption>
+</figure>
+<figure class="q">
+<blockquote>„Od poslednej aktualizácie nesynchronizuje beh a bicykel ale len kroky.“</blockquote>
+<figcaption><span class="st">★<span class="st-off">☆☆☆☆</span></span><span class="q-au">Blasterer13</span><span class="q-me">App Store</span><span class="q-me">2. prosince 2025</span></figcaption>
+</figure>
+<figure class="q">
+<blockquote>„Též po aktualizaci nefunkční, již nahlášeno na info...“</blockquote>
+<figcaption><span class="st">★<span class="st-off">☆☆☆☆</span></span><span class="q-au">Hana Pavelková</span><span class="q-me">Google Play</span><span class="q-me">13. listopadu 2025</span></figcaption>
+</figure></div>
+  <div class="insight"><h4>Interpretace</h4><p>Pět nejnovějších recenzí v datasetu, od 9. listopadu do 2. prosince 2025, má shodně jednu hvězdu a všechny popisují problém, který vznikl po aktualizaci. Na iOS uživatelé jmenují verzi 5.0, na Androidu 4.16.2. Vypadá to na regresi vypuštěnou do produkce bez zachycení.</p></div>
+</article>
+</section>
+
+<section id="ekosystem">
+ <h2>Zmíněné ekosystémy a zařízení</h2>
+ <p class="sec-sub">Počet recenzí, které danou službu nebo zařízení jmenují.</p>
+ <svg class="chart" viewBox="0 0 1000 346" role="img" preserveAspectRatio="xMinYMin meet">
+<text x="0" y="22.0" class="cl" dominant-baseline="middle">Google Fit</text>
+<rect x="280" y="8" width="654" height="26" rx="3" class="track"/>
+<rect x="280" y="8" width="654.0" height="26" rx="3" fill="var(--green-deep)"/>
+<text x="944" y="22.0" class="cv" dominant-baseline="middle">33</text>
+<text x="0" y="60.0" class="cl" dominant-baseline="middle">Sportoviště / Foursquare</text>
+<rect x="280" y="46" width="654" height="26" rx="3" class="track"/>
+<rect x="280" y="46" width="118.9" height="26" rx="3" fill="var(--green-mid)"/>
+<text x="944" y="60.0" class="cv" dominant-baseline="middle">6</text>
+<text x="0" y="98.0" class="cl" dominant-baseline="middle">Garmin</text>
+<rect x="280" y="84" width="654" height="26" rx="3" class="track"/>
+<rect x="280" y="84" width="99.1" height="26" rx="3" fill="var(--green-mid)"/>
+<text x="944" y="98.0" class="cv" dominant-baseline="middle">5</text>
+<text x="0" y="136.0" class="cl" dominant-baseline="middle">Apple Watch, hodinky</text>
+<rect x="280" y="122" width="654" height="26" rx="3" class="track"/>
+<rect x="280" y="122" width="59.5" height="26" rx="3" fill="var(--green-mid)"/>
+<text x="944" y="136.0" class="cv" dominant-baseline="middle">3</text>
+<text x="0" y="174.0" class="cl" dominant-baseline="middle">Mi Fit, Amazfit, Zepp</text>
+<rect x="280" y="160" width="654" height="26" rx="3" class="track"/>
+<rect x="280" y="160" width="59.5" height="26" rx="3" fill="var(--green-mid)"/>
+<text x="944" y="174.0" class="cv" dominant-baseline="middle">3</text>
+<text x="0" y="212.0" class="cl" dominant-baseline="middle">Huawei Health</text>
+<rect x="280" y="198" width="654" height="26" rx="3" class="track"/>
+<rect x="280" y="198" width="39.6" height="26" rx="3" fill="var(--green-mid)"/>
+<text x="944" y="212.0" class="cv" dominant-baseline="middle">2</text>
+<text x="0" y="250.0" class="cl" dominant-baseline="middle">Samsung Health</text>
+<rect x="280" y="236" width="654" height="26" rx="3" class="track"/>
+<rect x="280" y="236" width="39.6" height="26" rx="3" fill="var(--green-mid)"/>
+<text x="944" y="250.0" class="cv" dominant-baseline="middle">2</text>
+<text x="0" y="288.0" class="cl" dominant-baseline="middle">Health Connect</text>
+<rect x="280" y="274" width="654" height="26" rx="3" class="track"/>
+<rect x="280" y="274" width="19.8" height="26" rx="3" fill="var(--green-mid)"/>
+<text x="944" y="288.0" class="cv" dominant-baseline="middle">1</text>
+<text x="0" y="326.0" class="cl" dominant-baseline="middle">Strava</text>
+<rect x="280" y="312" width="654" height="26" rx="3" class="track"/>
+<rect x="280" y="312" width="19.8" height="26" rx="3" fill="var(--green-mid)"/>
+<text x="944" y="326.0" class="cv" dominant-baseline="middle">1</text>
+</svg>
+ <p class="cap">Google Fit je zmíněn ve 33 recenzích, tedy ve 41 % všech. Je to zároveň nejčastěji jmenovaný viník i nejčastější prostředník — a od roku 2025 se v recenzích objevuje jeho nástupce Health Connect, který aplikace zatím nepodporuje.</p>
+</section>
+
+</div>
+
+<div class="wrap" style="padding-bottom:64px">
+<section id="byznys" class="biz" style="border-bottom:0">
+ <h2>Finanční dopad</h2>
+ <p class="sec-sub">Aplikace není doplněk k pojištění. Je to mechanismus, kterým klient získává slevu na pojistném.</p>
+ <p>Když aplikace nepřenese data, uživatel neztratí jen komfort — přijde o peníze, na které si sportem vydělal. Tento řetězec je v recenzích pojmenovaný explicitně.</p>
+ <div class="biz-grid">
+  <figure class="q">
+<blockquote>„…Prichazim kvuli tomu o stokoruny na sleve.“</blockquote>
+<figcaption><span class="st">★★<span class="st-off">☆☆☆</span></span><span class="q-au">mever1ck</span><span class="q-me">App Store</span><span class="q-me">7. září 2025</span></figcaption>
+</figure>
+  <figure class="q">
+<blockquote>„Nikdy správně nepřipojila data z jiných aplikací a vy přicházíte o slevy na pojištění.“</blockquote>
+<figcaption><span class="st">★<span class="st-off">☆☆☆☆</span></span><span class="q-au">Draho Turek</span><span class="q-me">Google Play</span><span class="q-me">21. května 2021</span></figcaption>
+</figure>
+  <figure class="q">
+<blockquote>„…Takže teď již nepoužívám,nervy mám jen jedny,po uplynutí smluvní doby odcházím...“</blockquote>
+<figcaption><span class="st">★<span class="st-off">☆☆☆☆</span></span><span class="q-au">Karel Mlejnek</span><span class="q-me">Google Play</span><span class="q-me">26. září 2021</span></figcaption>
+</figure>
+  <figure class="q">
+<blockquote>„…aplikace nespolehliva a dal se nijak nevyviji pro lepsi vyuziti, myslim, ze brzo pojisteni zmenim, tohle pro me bohuzel nema smysl“</blockquote>
+<figcaption><span class="st">★<span class="st-off">☆☆☆☆</span></span><span class="q-au">Olga Maděrová</span><span class="q-me">Google Play</span><span class="q-me">23. května 2023</span></figcaption>
+</figure>
+  <figure class="q">
+<blockquote>„…Nicméně je třeba s tím něco udělat nebo na celé takové pojištěni kašlu.“</blockquote>
+<figcaption><span class="st">★<span class="st-off">☆☆☆☆</span></span><span class="q-au">Tomáš Davidek</span><span class="q-me">Google Play</span><span class="q-me">4. ledna 2022</span></figcaption>
+</figure>
+  <figure class="q">
+<blockquote>„…Řešil jsem to několikrát s podporou, ale neúspěšně. Dokonce mi nabídli paušální body, ale to jsem nechtěl protože by to bylo pro mně demotivační. Byl to nicméně asi neřešitelný problém, ale jsem vděčný za jejich prozakaznický přístup. Už jsem chtěl zrušit smlouvu, ale DNES mně aplikace při otevření požádala nezvykle o přihlášení a VOILA, vše je opraveno!!!!!…“</blockquote>
+<figcaption><span class="st">★★★★★<span class="st-off"></span></span><span class="q-au">kraliks</span><span class="q-me">App Store</span><span class="q-me">4. ledna 2025</span></figcaption>
+</figure>
+ </div>
+ <div class="biz-note">
+  <h4 style="color:var(--green-mid)">Důsledky</h4>
+  <p><b>Nefunkční synchronizace se rovná zdražení pojistného.</b> 10 recenzí spojuje problém s aplikací s úvahou o odchodu nebo se ztrátou slevy. Z pohledu klienta je to churn signál, ne UX poznámka.</p>
+  <p><b>Podpora sanuje chyby ručně.</b> V recenzích se opakuje, že podpora chybějící aktivity dopíše nebo nabídne paušální body. To je funkční provizorium, ale je to opakovaný manuální náklad na každý výpadek — a jeden uživatel paušální body odmítl, protože pro něj byly demotivační.</p>
+  <p><b>Mutumutu na Google Play aktivně odpovídá</b> — reagovalo na 42 ze 72 recenzí. Ochota komunikovat tam je. Chybí ale řešení, které by tu komunikaci nepotřebovalo.</p>
+ </div>
+</section>
+</div>
+
+<div class="wrap">
+
+<section id="doporuceni">
+ <h2>Návrh priorit</h2>
+ <p class="sec-sub">Tato kapitola není daty z recenzí. Je to návrh odvozený ze zjištění výše a slouží jako podklad k diskusi, ne jako zadání.</p>
+ <div class="recs"><div class="rec">
+  <div class="rec-top"><h4>Migrace na Health Connect a přímá napojení</h4><span class="prio prio-hi">Vysoká</span></div>
+  <p>Google Fit jako jediný prostředník na Androidu je dnes hlavní zdroj problémů i limit pokrytí. Přechod na Health Connect a rozšíření přímých napojení po vzoru Garminu odstraní celý řetěz aplikací, ve kterém se data ztrácejí.</p>
+ </div>
+<div class="rec">
+  <div class="rec-top"><h4>Spolehlivý přenos na pozadí a viditelný stav synchronizace</h4><span class="prio prio-hi">Vysoká</span></div>
+  <p>Uživatelé dnes musí aplikaci otevírat ručně, aby se data načetla. Přenos na pozadí s frontou a opakováním, doplněný o jasný stav „naposledy synchronizováno“ přímo na hlavní obrazovce, odstraní většinu stížností první kategorie.</p>
+ </div>
+<div class="rec">
+  <div class="rec-top"><h4>Přehled aktivit jako důkaz</h4><span class="prio prio-hi">Vysoká</span></div>
+  <p>Obrazovka, kde uživatel vidí každou započítanou aktivitu, její zdroj, čas a přiřazené body — včetně toho, co bylo odečteno jako duplicita a proč. Řeší kategorii nepřesného počítání tím, že mění nedůvěru v ověřitelnost.</p>
+ </div>
+<div class="rec">
+  <div class="rec-top"><h4>Trvalé přihlášení</h4><span class="prio prio-mid">Střední</span></div>
+  <p>Perzistentní session s biometrikou a možností nastavit heslo. Jednorázový kód z e-mailu zůstane jako záložní cesta, ne jako jediná.</p>
+ </div>
+<div class="rec">
+  <div class="rec-top"><h4>Revize mechaniky sportovišť</h4><span class="prio prio-mid">Střední</span></div>
+  <p>Umožnit záznam venkovních aktivit bez výběru sportoviště, doplnit notifikaci o běžícím měření a automatické ukončení. Omezit oprávnění k poloze na dobu používání.</p>
+ </div>
+<div class="rec">
+  <div class="rec-top"><h4>Nativní aplikace pro hodinky</h4><span class="prio prio-mid">Střední</span></div>
+  <p>Opakovaný požadavek z App Store. Řeší situaci, kdy uživatel nechá telefon v šatně, a zároveň zvyšuje kvalitu dat u tréninků.</p>
+ </div>
+<div class="rec">
+  <div class="rec-top"><h4>Regresní sada a postupné vypouštění verzí</h4><span class="prio prio-hi">Vysoká</span></div>
+  <p>Automatizované testy nad synchronizačními scénáři a fázovaný rollout by zachytily situaci z listopadu 2025 dřív, než se objeví v hodnoceních.</p>
+ </div></div>
+ <div class="callout" style="margin-top:40px">
+  <h4>Opatření s nejrychlejším efektem</h4>
+  <p>Regrese z listopadu 2025 je nejaktuálnější problém v datech. Oprava připisování běhu a jízdy na kole na iOS 5.0 a pádů na Androidu 4.16.2 se do hodnocení promítne rychleji než nová funkce; několik pozitivních recenzí v datasetu vzniklo právě po opravě chyby, ne po přidání funkce.</p>
+ </div>
+</section>
+
+<section id="omezeni">
+ <h2>Omezení analýzy</h2>
+ <p class="sec-sub">Co z dat vyčíst nelze a kde jsou hranice platnosti závěrů.</p>
+ <ul class="plain">
+  <li><b>Malý vzorek.</b> 81 textových recenzí za sedm let je málo na statistickou jistotu. Čísla ukazují pořadí problémů, ne jejich přesnou velikost v populaci uživatelů.</li>
+  <li><b>Výběrové zkreslení.</b> Recenze píší spíš nespokojení uživatelé. Podíl 68 % negativních není podíl nespokojených klientů Mutumutu — hodnotí jen zlomek uživatelské základny. Srovnání s celkovými hodnoceními obchodů ale ukazuje, že na Androidu je toto zkreslení malé.</li>
+  <li><b>Kategorizace je naše.</b> Recenze jsme ručně přiřadili do kategorií; jedna recenze může spadat do několika. Hranice mezi „nepřenesla se data“ a „špatně se spočítala“ je někdy neostrá.</li>
+  <li><b>Texty končí koncem roku 2025, souhrnné skóre je aktuální.</b> Nejnovější recenze s textem je z 2. prosince 2025 (App Store) a 13. listopadu 2025 (Google Play). Celková hodnocení obchodů jsou ze snímku k 12. září 2026. Co se dělo mezi tím, z dat nevyčteme — víme jen, že skóre na Google Play je dnes 2,73★.</li>
+  <li><b>Nemáme provozní data.</b> Bez přístupu k analytice, crash reportům a logům synchronizace jsou příčiny popsané v tomto dokumentu hypotézy odvozené z popisu uživatelů.</li>
+ </ul>
+</section>
+
+</div>
+
+<footer>
+ <div class="wrap foot-in">
+  <img src="data:image/png;base64,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" alt="Etnetera Flow">
+  <p><b style="color:var(--ink-2)">Etnetera Flow</b> &nbsp;|&nbsp; Analýza recenzí aplikace Mutumutu &nbsp;|&nbsp; podklad pro pre-sale &nbsp;|&nbsp; zdroj: 81 veřejných recenzí z Google Play a App Store</p>
+ </div>
+</footer>
+
+</body>
+</html>
